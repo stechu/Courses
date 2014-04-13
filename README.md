@@ -1,4 +1,4 @@
-CSCourses
+Courses
 =========
 
-Courses taken.
+Private repo for courses.
