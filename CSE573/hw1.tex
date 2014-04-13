@@ -1,0 +1,77 @@
+\documentclass[12pt, letterpaper]{article}
+\usepackage{amsmath,amsthm,amsfonts,amssymb,amscd}
+\usepackage{fullpage}
+\usepackage{lastpage}
+\usepackage{enumerate}
+\usepackage{fancyhdr}
+\usepackage{mathrsfs}
+\usepackage{listings}
+\usepackage[T1]{fontenc}
+\usepackage{xcolor}
+\usepackage[margin=3cm]{geometry}
+\renewcommand{\rmdefault}{ptm}
+\setlength{\parindent}{0.0in}
+\setlength{\parskip}{0.05in}
+
+% Edit these as appropriate
+\newcommand\course{CSE 573}
+\newcommand\semester{Spring 2014}     % <-- current semester
+\newcommand\hwnum{1}                  % <-- homework number
+\newcommand\yourname{Shumo Chu} % <-- your name
+\newcommand\email{chushumo@cs}           % <-- your CS login
+
+\newenvironment{ans}[1]{
+  \subsection*{Problem #1}
+}%{\newpage}
+
+\pagestyle{fancyplain}
+\headheight 30pt
+\lhead{\yourname\ (\email)\\\course\ --- \semester}
+\chead{\textbf{\Large Problem Set \hwnum}}
+\rhead{\today}
+\headsep 10pt
+\lstset{
+    mathescape=true, 
+    commentstyle={\color{gray}},
+    numbers=left,
+    xleftmargin=2em,
+    frame=single,
+    framexleftmargin=1.5em,
+    basicstyle=\sffamily
+    }
+
+\begin{document}
+
+\begin{ans}{1}
+ \noindent \textbf{(a)}. 
+ \begin{itemize}
+    \item \textbf{State:} Let the $4$ gallon jug as $A$, the $7$ gallon jug as $B$. The state can be represented as the amount of water in each jug, namely $W(A), W(B)$.
+    \item \textbf{Initial State:} $W(A)=0, W(B)=0$
+    \item \textbf{Goal Test:} The goal is reached when at least one of the following statement is true: $W(A)=1$ , $W(B)=1$
+    \item \textbf{Actions:} 
+        \begin{enumerate}
+            \item Empty $4$ gallon jug: $W(A)\leftarrow 0$.
+            \item Empty $7$ gallon jug: $W(B)\leftarrow 0$.
+            \item Fill $4$ gallon jug: $W(A)\leftarrow 4$.
+            \item Fill $7$ gallon jug: $W(B)\leftarrow 7$.
+            \item Pour water from $4$ gallon jug to $7$ gallon jug.
+            \item Pour water from $7$ gallon jug to $4$ gallon jug.
+        \end{enumerate}
+    \item \textbf{Cost:} The cost is accumualative along the path. Action 1., 2., 5. and 6. has no cost. The cost of action 3. or 4. is the amount of water that actually is filled.  
+ \end{itemize}
+ \noindent \textbf{(b)}.
+ \noindent \textbf{(c)}.
+\end{ans}
+
+\begin{ans}{2}
+\noindent \textbf{a}.
+\end{ans}
+
+\begin{ans}{3}
+\end{ans}
+
+\begin{ans}{4}
+\end{ans}
+
+\end{document}
+
