@@ -7,39 +7,156 @@ import copy
 
 # Colors supported by graphviz, in some pleasing order
 colors = {
-    "fillA": "cyan",
-    "fillB": "cyan",
-    "emptyA": "blue",
-    "emptyB": "blue",
-    "pourA": "orange",
-    "pourB": "orange"
+    "fa": "brown",
+    "fb": "brown1",
+    "ea": "cadetblue",
+    "eb": "cadetblue1",
+    "pa": "orange",
+    "pb": "orange4"
 }
+
+curId = 1
+capAset = 4
+capBset = 7
+goal = 2
 
 
 def export_dot():
+    # helper functions
+    def getColor(node):
+        (a, b) = node["state"]
+        if a == goal or b == goal:
+            return "red"
+        return "black"
+
+    def getLabel(node):
+        if node["leaf"]:
+            return "{} \n cost:{}".format(node["state"], node["cost"])
+        else:
+            return node["state"]
+
     print """digraph searchTree {
-  size = "6,6";
+  size = "8,8";
   node [ shape=oval, style=filled, fillcolor=lightblue2 ] ;
+  edge [fontname="Helvetica"];
+  splines=curved;
 """
     (nodes, edges) = getGraph()
     for n in nodes:
-        print "{} [label=\"{}\", color=black, penwidth=2];".format(
-            n["id"], n["state"])
+        print "{} [label=\"{}\", color={}, penwidth=2];".format(
+            n["id"], getLabel(n), getColor(n))
     for (x, y, action) in edges:
-        print "{} -> {} [color={}]".format(
-            x, y, colors[action])
+        print "{} -> {} [xlabel=\"{}\",color={}]".format(
+            x, y, action, colors[action])
     print "}"
 
 
 def getGraph():
-    tree = bfs()
+    tree = bfs(capAset, capBset, goal)
     nodes = [v for k, v in tree.items()]
     edges = [(n["parent"], n["id"], n["action"]) for n in nodes
              if n["parent"] != -1]
+    hasChild = set()
+    for node in nodes:
+        hasChild.add(node["parent"])
+    for node in nodes:
+        if node["id"] in hasChild:
+            node["leaf"] = False
+        else:
+            node["leaf"] = True
     return (nodes, edges)
 
 
-def bfs():
+def bfs(capA, capB, goal):
+    #helper functions
+    def fillA(state):
+        (a, b) = state["state"]
+        global curId
+        curId += 1
+        ans = {
+            "state": (capA, b),
+            "cost": state["cost"] + capA - a,
+            "id": curId,
+            "parent": state["id"],
+            "action": "fa",
+            "visited": copy.deepcopy(state["visited"])
+        }
+        return ans
+
+    def fillB(state):
+        (a, b) = state["state"]
+        global curId
+        curId += 1
+        ans = {
+            "state": (a, capB),
+            "cost": state["cost"] + capB - b,
+            "id": curId,
+            "parent": state["id"],
+            "action": "fb",
+            "visited": copy.deepcopy(state["visited"])
+        }
+        return ans
+
+    def emptyA(state):
+        (a, b) = state["state"]
+        global curId
+        curId += 1
+        ans = {
+            "state": (0, b),
+            "cost": state["cost"],
+            "id": curId,
+            "parent": state["id"],
+            "action": "ea",
+            "visited": copy.deepcopy(state["visited"])
+        }
+        return ans
+
+    def emptyB(state):
+        (a, b) = state["state"]
+        global curId
+        curId += 1
+        ans = {
+            "state": (a, 0),
+            "cost": state["cost"],
+            "id": curId,
+            "parent": state["id"],
+            "action": "eb",
+            "visited": copy.deepcopy(state["visited"])
+        }
+        return ans
+
+    def pourA(state):
+        (a, b) = state["state"]
+        global curId
+        curId += 1
+        ans = {
+            "state": (lambda x, y: (x + y - capB, capB)
+                      if x + y > capB else (0, x + y))
+                     (a, b),
+            "cost": state["cost"],
+            "id": curId,
+            "parent": state["id"],
+            "action": "pa",
+            "visited": copy.deepcopy(state["visited"])
+        }
+        return ans
+
+    def pourB(state):
+        (a, b) = state["state"]
+        global curId
+        curId += 1
+        ans = {
+            "state": (lambda x, y: (capA, x + y - capA)
+                      if x + y > capA else (x + y, 0))
+            (a, b),
+            "cost": state["cost"],
+            "id": curId,
+            "parent": state["id"],
+            "action": "pb",
+            "visited": copy.deepcopy(state["visited"])
+        }
+        return ans
+
     initState = {
         "state": (0, 0),
         "cost": 0,
@@ -48,106 +165,44 @@ def bfs():
         "action": "Nothing",
         "visited": set()
     }
-    goal = 2
     queue = []
     queue.append(initState)
-    capA = 7
-    capB = 4
-    curId = 1
     tree = dict()
 
     while queue:
         state = queue.pop(0)
-        rstate = state["state"]
+        (a, b) = state["state"]
         #check if visited
-        if (rstate == (0, 0) and curId != 1) or rstate == (capA, capB):
+        if ((a, b) == (0, 0) and curId != 1) or (a, b) == (capA, capB):
             continue
-        if rstate in state["visited"]:
+        if (a, b) in state["visited"]:
             #tree[state["id"]] = state
             continue
 
-        if rstate[0] == goal or rstate[1] == goal:
+        if a == goal or b == goal:
             tree[state["id"]] = state
             break
         else:
             tree[state["id"]] = state
-            state["visited"].add(rstate)
+            state["visited"].add((a, b))
             # fill A
-            fillA = {
-                "state": (capA, rstate[1]),
-                "cost": state["cost"] + capA - rstate[0],
-                "id": curId,
-                "parent": state["id"],
-                "action": "fillA",
-                "visited": copy.deepcopy(state["visited"])
-            }
-            curId += 1
-            if rstate[0] != capA:
-                queue.append(fillA)
+            if a != capA:
+                queue.append(fillA(state))
             # fill B
-            fillB = {
-                "state": (rstate[0], capB),
-                "cost": state["cost"] + capB - rstate[1],
-                "id": curId,
-                "parent": state["id"],
-                "action": "fillB",
-                "visited": copy.deepcopy(state["visited"])
-            }
-            curId += 1
-            if rstate[1] != capB:
-                queue.append(fillB)
+            if b != capB:
+                queue.append(fillB(state))
             # empty A
-            emptyA = {
-                "state": (0, rstate[1]),
-                "cost": state["cost"],
-                "id": curId,
-                "parent": state["id"],
-                "action": "emptyA",
-                "visited": copy.deepcopy(state["visited"])
-            }
-            curId += 1
-            if rstate[0] > 0:
-                queue.append(emptyA)
+            if a > 0:
+                queue.append(emptyA(state))
             # empty B
-            emptyB = {
-                "state": (rstate[0], 0),
-                "cost": state["cost"],
-                "id": curId,
-                "parent": state["id"],
-                "action": "emptyB",
-                "visited": copy.deepcopy(state["visited"])
-            }
-            curId += 1
-            if rstate[1] > 0:
-                queue.append(emptyB)
+            if b > 0:
+                queue.append(emptyB(state))
             # pour A to B
-            pourA = {
-                "state": (lambda x, y: (x + y - capB, capB)
-                          if x + y > capB else (0, x + y))
-                         (rstate[0], rstate[1]),
-                "cost": state["cost"],
-                "id": curId,
-                "parent": state["id"],
-                "action": "pourA",
-                "visited": copy.deepcopy(state["visited"])
-            }
-            curId += 1
-            if rstate[0] > 0 and rstate[1] != capB:
-                queue.append(pourA)
+            if a > 0 and b != capB:
+                queue.append(pourA(state))
             # pour B to A
-            pourB = {
-                "state": (lambda x, y: (capA, x + y - capA)
-                          if x + y > capA else (x + y, 0))
-                         (rstate[0], rstate[1]),
-                "cost": state["cost"],
-                "id": curId,
-                "parent": state["id"],
-                "action": "pourB",
-                "visited": copy.deepcopy(state["visited"])
-            }
-            curId += 1
-            if rstate[1] > 0 and rstate[0] != capA:
-                queue.append(pourB)
+            if b > 0 and a != capA:
+                queue.append(pourB(state))
 
     return tree
 
